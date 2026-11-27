@@ -99,3 +99,6 @@
 
 ## 2026-11-27 — Owner portfolio publication and attribution
 - Owner configured GitHub Pages publishing from portfolio-demo/root and required German first-visit default, Russian switching, responsive operation and footer credit Natalie Ragulina (Netaniya). German default was already present; last explicitly chosen language is retained. Footer localized DE/EN/RU, including rights notice for the project; third-party software retains its own licenses. Browser fallback excludes unavailable AI controls and links to the full Render application. Changes AI-assisted, requirements and Pages setup owner-directed/executed. Fresh CI and deployments pending.
+
+## 2026-11-27 — Portfolio MVP documentation reconciliation
+- Owner requested completion review. Both public URLs are operational based on prior live checks; attribution update deployed on Render and observed on Pages. Updated DE/EN README, acceptance and competitor comparison to current scope. Historical records retained. This is a portfolio MVP, not a production release or quantified authorship audit. Main branch still differs; current application implementation is feature/hybrid-retrieval; Pages uses portfolio-demo. No other projects changed.

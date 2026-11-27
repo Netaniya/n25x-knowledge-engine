@@ -1,87 +1,51 @@
 ![N25X](branding/n25x-logo.webp)
 
-# N25X Knowledge Engine
+# N25X NOESIS — v0.2.0
 
-**Version 0.2.0 — local document retrieval MVP**
+Multilingual AI document research system · Portfolio MVP
 
-Project owner and initiator: Natalie Ragulina (Netaniya). Initial implementation developed with AI assistance. A standalone portfolio project for evidence-based document search. No private NETA25X Studio code or documents are included.
+Project initiator and owner: Natalie Ragulina (Netaniya). Developed with AI assistance; owner decisions, deployment participation and manual acceptance are recorded in the work log. No private Studio data or code is included.
 
-[Deutsch](README.de.md) · [English](README.md)
+[Live portfolio demo (GitHub Pages)](https://netaniya.github.io/n25x-knowledge-engine/) · [Full AI demo (Render)](https://n25x-noesis.onrender.com/) · [Deutsch](README.de.md)
 
-## Features
+## Working product
+- German first-visit default; English and Russian selectable; three themes, responsive interface.
+- Public AI demo: UTF-8 TXT/Markdown uploads, temporary isolated browser-session libraries, BM25 retrieval, source-scoped search, clickable evidence, TXT export.
+- Real GPT-OSS 20B generation via Groq, with explicit consent. Document-only answers and separate general model knowledge; citations are source IDs, not a guarantee of factual correctness.
+- GitHub Pages fallback: actual browser-local BM25 search, no server or key, no AI generation. Data clears on reload; link to the full app.
+- Local installation also supports text PDFs up to 5 MB / 150 pages, SQLite and optional embedding adapters.
 
-- Upload UTF-8 TXT, Markdown and text-based PDF documents (5 MB each, max. 150 PDF pages).
-- Persist extracted passages and PDF page numbers in SQLite; delete a document and its passages.
-- Rank relevant passages using BM25 lexical retrieval. Each result includes a source ID, filename, optional PDF page, and passage.
-- Offline mode returns passages, not a fabricated AI answer. Optional generation uses a configured OpenAI-compatible endpoint and validates that cited source IDs exist. Citation validity does not prove factual correctness.
-- German (default), English and Russian interface with persistent language selection, a fictional sample document, and clickable source citations.
-- Three switchable UI themes (night blue, deep turquoise, light turquoise), saved locally in the browser.
-- Browser UI, REST API and OpenAPI documentation; automated tests and a GitHub Actions CI definition.
-
-## Local quick start (Python 3.12 or 3.13)
-
+## Run locally (Python 3.12 or 3.13)
 ```bash
+git clone -b feature/hybrid-retrieval https://github.com/Netaniya/n25x-knowledge-engine.git
+cd n25x-knowledge-engine
 python -m venv .venv
-# Linux/macOS
-source .venv/bin/activate
-# Windows PowerShell alternative: .\.venv\Scripts\Activate.ps1
+# Linux/macOS: source .venv/bin/activate
+# Windows PowerShell: .\.venv\Scripts\Activate.ps1
 python -m pip install -r requirements-dev.txt
 python -m pytest -q
 python -m uvicorn app.main:app --host 127.0.0.1 --port 8000
 ```
-
-Open http://127.0.0.1:8000 and upload samples/demo-de.txt. Ask "Was ist die Supportzeit?". Expected evidence: Monday–Friday, 09:00–17:00. API docs: http://127.0.0.1:8000/docs.
-
-## Docker (configuration supplied, build not tested in authoring environment)
-
-```bash
-docker compose up --build
-```
-
-The service binds to localhost; SQLite persists in a named volume.
-
-## Optional generation
-
-Set environment variables LLM_API_KEY and LLM_MODEL before starting. LLM_BASE_URL defaults to https://api.openai.com/v1; select a model supported by the provider. The UI's explicit AI checkbox enables sending the question and retrieved text to that endpoint. API charges may apply. Do not upload confidential documents. No key is needed for retrieval. Never commit keys.
+Open http://127.0.0.1:8000. API docs: http://127.0.0.1:8000/docs. Docker: `docker compose up --build` (localhost binding). See [public AI configuration](docs/PUBLIC_AI.md) and [hybrid retrieval ADR](docs/adr/0001-hybrid-retrieval.md). Never commit secrets.
 
 ## Architecture
-
 ```mermaid
 flowchart LR
- UI[Browser UI] --> API[FastAPI]
- API --> EX[Text extraction and chunking]
- EX --> DB[(SQLite)]
- API --> RET[BM25 retrieval]
- DB --> RET
- RET --> OUT[Source passages]
- RET -. Optional .-> LLM[Configured LLM endpoint]
+ UI[Responsive browser UI] --> API[FastAPI]
+ API --> DB[(Session-scoped SQLite)]
+ DB --> RET[BM25 retrieval]
+ RET --> OUT[Source evidence]
+ RET --> LLM[Optional Groq LLM]
  LLM --> VAL[Citation ID validation]
  VAL --> OUT
  OUT --> UI
+ P[GitHub Pages] --> JS[Browser-local BM25]
+ P --> UI
 ```
 
-## Current limitations / next milestones
+## Verification and limits
+[CI 46002577620](https://github.com/Netaniya/n25x-knowledge-engine/actions/runs/46002577620): Python/API, optional Qdrant, Docker and Chromium smoke passed for app commit 85c83967f539beb653d3d8ee55d2a207cb20027d. Live Russian positive/negative RAG acceptance by owner; German and English live scenarios independently exercised. See [acceptance](docs/ACCEPTANCE.md), [work log](docs/WORK_LOG.md) and [documentation-based comparison](docs/BENCHMARK.md).
 
-Local single-user demo only: no authentication, tenancy, OCR, streaming, rate limiting, or production security hardening. Default lexical mode does not understand paraphrases; optional hybrid mode requires a configured embedding model. PDF processing can be resource intensive; do not expose the upload endpoint publicly. The optional generator may still hallucinate even if citation IDs are valid; use source inspection and evaluation. No live model call was performed during initial testing. Docker and remote CI are not yet verified.
+Free Render hosting may sleep or become temporarily unavailable. Public AI limits: 3 calls/minute, 30/24h globally, 6/session/24h (temporary counters can reset); provider limits also apply. Test data only; no confidential documents. Public demo accepts TXT/Markdown up to 1 MB, not PDF. No production authentication, persistent cloud storage, OCR, or conversation history. Semantic adapters are implemented but public demo uses BM25; real embedding quality is not validated. No claim of competitor superiority, comprehensive security audit or zero hallucinations.
 
-Next: persistent Qdrant indexing and LangChain integration; retrieval and answer evaluation; React/TypeScript frontend; CI verification; Kubernetes, observability and authenticated cloud demo. These are planned features, not current capabilities.
-
-## German portfolio description
-
-Eigenständiger Prototyp für dokumentenbasierte Recherche mit Python/FastAPI, SQLite und BM25-Retrieval. Dokumente werden eingelesen, in Textabschnitte aufgeteilt und anhand relevanter Suchbegriffe ausgewertet. Quellen werden transparent angezeigt; optional ist eine Anbindung an einen konfigurierbaren LLM-Endpunkt vorgesehen. REST-API, automatisierte Tests sowie Docker- und CI-Konfiguration sind enthalten. Semantische Vektorsuche, LangChain, Kubernetes und Cloud-Deployment sind nächste Entwicklungsschritte.
-
-## Contributions and verification
-
-See [work log](docs/WORK_LOG.md), [learning notes](docs/LEARNING.md) and [test results](docs/test-results.txt). The owner reported a first manual review and test of v0.1.1; detailed test cases and second acceptance pass remain pending. See the work log. No open-source license has been selected; public visibility alone does not grant a license.
-
-## Scoped research and evidence export
-
-Select the documents to search, then choose 1, 2, 4, 6 or 8 passages. The API accepts optional `document_ids`: omitted/null means all, an empty list means no sources. Filtering takes place before ranking and optional generation. Each result shows its BM25 relevance score (not a confidence probability). Export the question, answer mode, answer and evidence to a UTF-8 text file locally; exported data may contain private document excerpts. The selected scope applies to the next query. Results are not translated automatically when the interface language changes.
-
-## Optional hybrid retrieval (v0.2.0 development)
-
-Default BM25 requires no model or network. For local embeddings run an OpenAI-compatible embedding service (e.g. Ollama with a multilingual embedding model installed); set LOCAL_EMBED_MODEL and optionally LOCAL_EMBED_BASE_URL (default http://127.0.0.1:11434/v1). Local mode accepts loopback or host.docker.internal only. Do not configure a proxy to a remote service if confidentiality is required.
-
-For optional cloud embeddings set CLOUD_EMBED_MODEL, CLOUD_EMBED_API_KEY and optionally CLOUD_EMBED_BASE_URL (HTTPS, default https://api.openai.com/v1). The user must explicitly select cloud and consent on each query. All selected passages, not only matched ones, may be sent; costs may apply. No automatic cloud fallback. Generation has a separate checkbox and configuration. Never commit secrets.
-
-Install `python -m pip install -r requirements-semantic.txt` to enable Qdrant local in-memory ranking; without it the implementation uses exact cosine ranking. Vectors are rebuilt per query, not persisted; max 128 selected chunks, otherwise lexical fallback. RRF combines ranks and is not confidence. A provisional cosine cutoff of 0.2 is not calibrated. Real multilingual quality and live provider integration are not yet validated. Docker and cloud deployment require further configuration and testing. See [ADR 0001](docs/adr/0001-hybrid-retrieval.md).
+© 2026 Natalie Ragulina (Netaniya). All rights reserved for project-owned material. Third-party components retain their licenses. No open-source license has been selected.
