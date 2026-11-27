@@ -35,5 +35,76 @@
 - Owner reports reviewing app/main.py, finding no errors during her inspection and considering the implementation consistent with agreed requirements. Reviewed file at recording time: blob 236881ff42187a8c665f80a04824168e679c3a0e. This is a self-reported manual code review, not a proof of absence of defects or a completed functional acceptance test.
 - Next design decision: choose the semantic retrieval architecture, including local versus hosted embeddings, multilingual requirements, and a measurable comparison against the existing BM25 baseline.
 
+## 2026-11-27 — Architecture decision and hybrid retrieval
+- Owner explicitly chose the combined local/cloud architecture. See docs/adr/0001-hybrid-retrieval.md. AI-assisted implementation adds provider adapters, source-scoped embeddings, rank fusion, local Qdrant option, fallback and consent controls. Code is in feature/hybrid-retrieval pending review. No live provider requests, model purchases or credentials added. Tests authored; execution and real-model quality still need confirmation.
+
+## 2026-11-27 — Owner inspection of hybrid development branch
+- Owner reports opening and reviewing the proposed implementation. No specific defect findings or executed test cases reported at this stage. Next owner task: author independent multilingual retrieval test cases with expected evidence and negative controls, then review actual results before acceptance.
+
+## 2026-11-27 — Product naming decision
+- Natalie Ragulina (Netaniya), project owner, selected N25X NOESIS from seven proposed names. This is her explicit product and creative decision. The name refers to understanding and intellectual analysis.
+- Naming selection is recorded; trademark/domain clearance and actual rebranding are not yet completed. Existing repository name remains unchanged.
+
+## 2026-11-27 — Owner interface decision
+- Natalie Ragulina (Netaniya) explicitly selected option B, the intelligent chat layout: a central conversational workspace with document library accessible through a sidebar, rather than a three-column research studio or dashboard. This is her product/UX decision.
+- Preserve source traceability, German default language with English and Russian options, and theme selection. Detailed layout implementation and functional acceptance remain pending.
+
+- Owner reviewed and approved the illustrated chat-first UI concept. This is approval of the design direction, not acceptance of a working frontend. Next: select visual identity and implement the approved interface, then validate it in browser.
+
 ## 2026-11-27 — Master brand identity
 - Project owner Natalie Ragulina (Netaniya) rejected earlier visual variants, specified a universal minimal N25X wordmark without extra symbols, chose the fifth monochrome concept as the starting point, requested blue tones and compact proportions, and explicitly approved the final blue design for all her GitHub projects. The compact web image is in branding/n25x-logo.webp. Full-resolution original saved separately. Trademark/design similarity clearance is pending.
+
+## 2026-11-27 — Chat-oriented workspace and regression coverage
+- Applied the previously owner-approved chat-oriented layout with a collapsible document library, visible N25X logo, NOESIS product title, and a question composer below the evidence area. Existing retrieval endpoints and controls preserved. Multi-turn chat history is not implemented yet.
+- Prior logo-bearing branch commit 7130bd848e36ae3cb15d25c2fb6db4175c0d6e28 passed GitHub Actions run 45988132952, including two pytest stages, Docker and Chromium smoke. The main-branch run 45988124488 failed at Chromium installation, not at pytest or Docker.
+- Added browser acceptance checks for logo decoding, toggling the document library, disabled unconfigured providers, manual TXT upload, individual selection, select-all, source scoping, and API documentation navigation. Execution of the expanded suite is pending at commit time. This implementation and test authoring are AI-assisted; the owner independently supplies the next test scenario and acceptance result.
+
+## 2026-11-27 — Owner mobile UX feedback
+- Owner inspected a static mobile preview and rejected its narrow presentation and lack of interaction; requested a real full-width, interactive mobile workspace. A static image is not an accepted functional demo.
+- AI-assisted change: default collapsed library on narrow screens, viewport-width workspace with 8px gutters, compact settings grid, larger touch targets and 16px question input. The browser suite now verifies initial mobile state and width. Public deployment is still unavailable.
+- Prior expanded CI run 45990041237 failed at the disabled local-provider assertion; Python and Docker passed. Changed provider controls to start disabled until health confirms configuration and changed the test to check the reflected disabled attribute. New CI result pending.
+
+## 2026-11-27 — Owner decision: answer scope C
+- Natalie Ragulina (Netaniya) selected option C: switch between document-only answers and document results plus separate general AI knowledge. This is an explicit owner product and behavior decision.
+- AI-assisted implementation: document-only default, separate answer scope and per-request consent for additional model call, question-only general request, separate unverified output and export, unavailable-provider handling. Existing grounded generation remains independently selectable. General knowledge is not presented as document evidence; no live model has been used to validate output quality.
+- Mobile UX commit e0f88f06c6b172bc562e9858d8bddea819ec1bfe passed GitHub Actions run 45990594548. New mode tests added; execution pending. Owner's next task is to specify independent positive and negative acceptance examples.
+
+## 2026-11-27 — Public portfolio demo preparation
+- Owner requested a real interactive employer-facing URL before further feature work and authorized free Render hosting.
+- AI-assisted demo mode separates browser sessions using signed random HttpOnly/Secure/SameSite cookies, filters document read/search/delete by owner, caps uploads and library capacity, expires demo documents after 24 hours on subsequent API traffic, and disables model calls regardless of server credentials. Public uploads restricted to test TXT/Markdown, 1 MB; local mode retains text-PDF support. No confidential data should be uploaded. This is not a production multi-user authentication system.
+- Added cross-session regression and public-demo restrictions test. Deployment pending successful checks and workspace selection.
+
+## 2026-11-27 — Owner live mobile acceptance findings
+- Owner opened the deployed Render application and submitted 'Как загрузить документы' and 'Как пользоваться'. Both produced no-match results. Owner identified missing onboarding and expected operational guidance. This is direct human functional feedback, not an AI-authored finding.
+- AI-assisted UI changes: visible three-language quick guide, one-click sample upload and real BM25 search, library shortcut, explicit empty-selection guidance and accurate public demo disclosure. Recognized common help questions display a labelled static guide, not simulated LLM output. No model or hosting plan changes.
+- Added browser assertions for Russian help, library shortcut and sample search. Deployment is pending a passing run and separate authorization.
+
+## 2026-11-27 — Owner requests actual AI integration
+- Owner identified unavailable combined mode and inability to answer a general purpose question in the live demo. Requested AI integration work be handled by assistant.
+- Prepared opt-in Groq GPT-OSS 20B public generation, preserving signed-session isolation and independent consent for general questions and grounded generation. Embedding providers remain disabled in public mode. Limits: 3 model calls/minute globally, 30/24h globally, 6/24h per browser session, 768 completion tokens per call. Counters are temporary SQLite and may reset on free-host storage loss. Provider free-tier limits remain independent.
+- Mocked consent, endpoint restriction, no document transmission for general answers, budget and fallback tests added. No account, credential or real inference verified yet; existing live version remains unchanged pending CI and secret configuration.
+
+## 2026-11-27 — Owner live RAG acceptance
+- Natalie Ragulina (Netaniya) configured the replacement API secret directly in Render, then manually tested the public mobile application. Screenshots provided in conversation show a general-model answer to the project-purpose question, one-click Russian demo retrieval, and grounded generation with the question 'В какие дни работает служба поддержки?' in documents-only mode with AI generation enabled.
+- Observed grounded answer: 'Служба поддержки работает с понедельника по пятницу, с 09:00 до 17:00. [S1]'. The displayed source n25x-demo-ru.txt, fragment 1, supports this answer. This is an owner-executed positive acceptance scenario, not a comprehensive RAG quality evaluation.
+- Live deployment dep-dc4ngj7f3r2c73c2dmmg, application commit 1b26a907dc93b0fa61c1acf4d7476d7e24283ee0; previous automated CI run 45994925884 succeeded. Negative evidence, contradictory sources, arbitrary user upload/export on live hosting, multilingual paraphrase quality and semantic retrieval remain to be evaluated. Public demo uses BM25, not live semantic embeddings. No measured percentage of human authorship is asserted.
+
+## 2026-11-27 — Owner live negative-evidence acceptance
+- Owner manually asked 'Какой номер телефона службы поддержки?' with document-only scope and generation enabled. The supplied live mobile screenshot shows: 'Номер телефона службы поддержки в предоставленной информации не указан. [S1]'. The displayed demo source provides support hours but no telephone number. The expected abstention behavior passed for this specific case; no number was fabricated.
+- This complements the prior positive live RAG case. It does not establish a general hallucination rate, semantic retrieval accuracy or correctness for arbitrary documents. Next: independent owner-designed contradictory-source or missing-evidence scenario.
+
+## 2026-11-27 — Independent live multilingual browser acceptance
+- At owner request, browser automation run 63ef2c9c-3d04-4b43-96dc-6d45756a72b9 tested the deployed public demo https://n25x-noesis.onrender.com. German and English UI, fictional sample upload and retrieval, and generated support-hours answers with displayed S1 sources passed. German missing-phone question returned no matching passages; no number was fabricated. Source anchors were clickable and export downloaded n25x-research.txt. No error or rate limit was reported in this run. Russian positive/negative scenarios were previously executed by the owner.
+- These are limited acceptance scenarios, not a statistical multilingual quality evaluation. Public retrieval remains lexical BM25, not live semantic embeddings. Owner requested verification; this independent run was assistant-directed, not personally executed by the owner.
+
+## 2026-11-27 — Owner portfolio publication and attribution
+- Owner configured GitHub Pages publishing from portfolio-demo/root and required German first-visit default, Russian switching, responsive operation and footer credit Natalie Ragulina (Netaniya). German default was already present; last explicitly chosen language is retained. Footer localized DE/EN/RU, including rights notice for the project; third-party software retains its own licenses. Browser fallback excludes unavailable AI controls and links to the full Render application. Changes AI-assisted, requirements and Pages setup owner-directed/executed. Fresh CI and deployments pending.
+
+## 2026-11-27 — Portfolio MVP documentation reconciliation
+- Owner requested completion review. Both public URLs are operational based on prior live checks; attribution update deployed on Render and observed on Pages. Updated DE/EN README, acceptance and competitor comparison to current scope. Historical records retained. This is a portfolio MVP, not a production release or quantified authorship audit. Main branch still differs; current application implementation is feature/hybrid-retrieval; Pages uses portfolio-demo. No other projects changed.
+
+## 2026-11-27 — Portfolio MVP completion improvements
+- Added optional Groq semantic relevance ranking (up to 24 selected chunks, explicit consent, shared model budget, validated result IDs, lexical fallback). It is semantic LLM ranking, not dense vector indexing. Added temporary in-page research history (20 items, restore and clear, no automatic conversation context). Hardened cookie server expiry, write limits and public security headers; added mock ranking, tampered-cookie, header and browser-history tests. No hosting or provider billing changes. Real ranking validation and production audit remain pending.
+
+## 2026-11-27 — Completion regression and branch reconciliation
+- CI 46008069953 passed on 8e092efdfc62af6b5dee7e28c51846f60fbfc87d including standalone Pages export/viewport checks. Prior semantic ranking test failed due to a shadowed JSON import; fixed and reran. Main branch divergence inspected: only README DE/EN, static UI, work log and logo had changed; current feature files supersede older versions, main work log text is retained, and logo blob identical. Reconciliation retains both parent histories. Dependency audit workflow added; result pending. New code not asserted deployed until Render reports live.
