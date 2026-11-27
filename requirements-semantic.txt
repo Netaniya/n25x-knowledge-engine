@@ -1,2 +1,0 @@
-# Optional local Qdrant backend; install alongside requirements.txt
-qdrant-client>=1.12,<2
