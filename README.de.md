@@ -2,7 +2,7 @@
 
 [English](README.md) · Deutsch
 
-**Version 0.1.3 — lokaler Prototyp für dokumentenbasierte Recherche**
+**Version 0.2.0 — lokaler Prototyp für dokumentenbasierte Recherche**
 
 Projektinitiatorin und Verantwortliche: Natalie Ragulina (Netaniya). Die Implementierung erfolgt KI-gestützt. Der öffentliche Prototyp ist von den privaten Studio-Projekten getrennt.
 
@@ -36,7 +36,7 @@ LLM_API_KEY und LLM_MODEL konfigurieren; optional LLM_BASE_URL. Nur wenn die KI-
 
 ## Grenzen und nächste Schritte
 
-Lokale Einzelbenutzer-Anwendung ohne Anmeldung, Mandantentrennung oder produktionsreife Sicherheitsmaßnahmen. Kein OCR, keine semantische Suche und kein verifiziertes Cloud-Deployment. Nicht öffentlich als Upload-Dienst bereitstellen. Qdrant, LangChain, Kubernetes, Monitoring und Evaluierung sind geplant, nicht implementiert.
+Lokale Einzelbenutzer-Anwendung ohne Anmeldung, Mandantentrennung oder produktionsreife Sicherheitsmaßnahmen. Kein OCR, keine validierte semantische Suche und kein verifiziertes Cloud-Deployment. Nicht öffentlich als Upload-Dienst bereitstellen. Qdrant, LangChain, Kubernetes, Monitoring und Evaluierung sind geplant, nicht implementiert.
 
 ## Zusammenarbeit und Qualität
 
@@ -45,3 +45,9 @@ Lokale Einzelbenutzer-Anwendung ohne Anmeldung, Mandantentrennung oder produktio
 ## Gezielte Recherche und Export
 
 Wähle die gewünschten Dokumente und maximal 1, 2, 4, 6 oder 8 Treffer. Die API filtert vor dem Ranking und vor der optionalen KI-Generierung. Die BM25-Werte sind Relevanzwerte, keine Vertrauenswahrscheinlichkeiten. Der lokale TXT-Export enthält Frage, Antwortmodus, Antwort und Quellen. Exportierte Auszüge können vertrauliche Daten enthalten. Die Dokumentauswahl gilt für die nächste Anfrage; ein Sprachwechsel übersetzt keine Dokumentinhalte.
+
+## Optionale hybride Suche (Entwicklung v0.2.0)
+
+BM25 ist Standard und benötigt kein Modell. Für lokale Embeddings: kompatiblen lokalen Dienst starten, LOCAL_EMBED_MODEL und optional LOCAL_EMBED_BASE_URL setzen (Standard http://127.0.0.1:11434/v1). Für Cloud-Embeddings: CLOUD_EMBED_MODEL, CLOUD_EMBED_API_KEY und optional CLOUD_EMBED_BASE_URL (HTTPS) konfigurieren. Nur nach ausdrücklicher Zustimmung pro Anfrage werden Frage und ausgewählte Textabschnitte übertragen. Kosten sind möglich. Kein automatischer Cloud-Fallback. Die Antwortgenerierung ist separat zu aktivieren.
+
+`python -m pip install -r requirements-semantic.txt` aktiviert die lokale Qdrant-Suche im Arbeitsspeicher. Ohne Paket wird exakte Kosinusähnlichkeit verwendet. Vektoren werden je Anfrage neu erstellt, maximal 128 Abschnitte. RRF-Werte sind keine Wahrscheinlichkeiten. Tests mit realen Modellen, dauerhafte Vektorindizierung, LangChain und Deployment stehen noch aus. [Architekturentscheidung](docs/adr/0001-hybrid-retrieval.md).
