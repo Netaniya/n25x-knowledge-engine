@@ -1,3 +1,5 @@
+![N25X](branding/n25x-logo.webp)
+
 # N25X Knowledge Engine
 
 [English](README.md) · Deutsch

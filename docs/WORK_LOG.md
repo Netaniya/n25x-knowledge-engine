@@ -34,3 +34,6 @@
 ## 2026-11-27 — Owner code review, v0.1.3
 - Owner reports reviewing app/main.py, finding no errors during her inspection and considering the implementation consistent with agreed requirements. Reviewed file at recording time: blob 236881ff42187a8c665f80a04824168e679c3a0e. This is a self-reported manual code review, not a proof of absence of defects or a completed functional acceptance test.
 - Next design decision: choose the semantic retrieval architecture, including local versus hosted embeddings, multilingual requirements, and a measurable comparison against the existing BM25 baseline.
+
+## 2026-11-27 — Master brand identity
+- Project owner Natalie Ragulina (Netaniya) rejected earlier visual variants, specified a universal minimal N25X wordmark without extra symbols, chose the fifth monochrome concept as the starting point, requested blue tones and compact proportions, and explicitly approved the final blue design for all her GitHub projects. The compact web image is in branding/n25x-logo.webp. Full-resolution original saved separately. Trademark/design similarity clearance is pending.
