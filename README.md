@@ -9,6 +9,7 @@ Project initiator and owner: Natalie Ragulina (Netaniya). Developed with AI assi
 [Live portfolio demo (GitHub Pages)](https://netaniya.github.io/n25x-knowledge-engine/) · [Full AI demo (Render)](https://n25x-noesis.onrender.com/) · [Deutsch](README.de.md)
 
 ## Working product
+- Optional consented semantic relevance ranking through Groq (up to 24 selected passages), lexical fallback, and temporary in-page research history (20 queries; restore/clear; no automatic conversation context).
 - German first-visit default; English and Russian selectable; three themes, responsive interface.
 - Public AI demo: UTF-8 TXT/Markdown uploads, temporary isolated browser-session libraries, BM25 retrieval, source-scoped search, clickable evidence, TXT export.
 - Real GPT-OSS 20B generation via Groq, with explicit consent. Document-only answers and separate general model knowledge; citations are source IDs, not a guarantee of factual correctness.
@@ -46,6 +47,6 @@ flowchart LR
 ## Verification and limits
 [CI 46002577620](https://github.com/Netaniya/n25x-knowledge-engine/actions/runs/46002577620): Python/API, optional Qdrant, Docker and Chromium smoke passed for app commit 85c83967f539beb653d3d8ee55d2a207cb20027d. Live Russian positive/negative RAG acceptance by owner; German and English live scenarios independently exercised. See [acceptance](docs/ACCEPTANCE.md), [work log](docs/WORK_LOG.md) and [documentation-based comparison](docs/BENCHMARK.md).
 
-Free Render hosting may sleep or become temporarily unavailable. Public AI limits: 3 calls/minute, 30/24h globally, 6/session/24h (temporary counters can reset); provider limits also apply. Test data only; no confidential documents. Public demo accepts TXT/Markdown up to 1 MB, not PDF. No production authentication, persistent cloud storage, OCR, or conversation history. Semantic adapters are implemented but public demo uses BM25; real embedding quality is not validated. No claim of competitor superiority, comprehensive security audit or zero hallucinations.
+Free Render hosting may sleep or become temporarily unavailable. Public AI limits: 3 calls/minute, 30/24h globally, 6/session/24h (temporary counters can reset); provider limits also apply. Test data only; no confidential documents. Public demo accepts TXT/Markdown up to 1 MB, not PDF. No production authentication, persistent cloud storage, OCR or multi-turn conversation context. Public search supports BM25 and optional LLM semantic ranking; real embedding quality is not validated and no permanent vector index is provided. No claim of competitor superiority, comprehensive security audit or zero hallucinations.
 
 © 2026 Natalie Ragulina (Netaniya). All rights reserved for project-owned material. Third-party components retain their licenses. No open-source license has been selected.

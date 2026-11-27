@@ -52,3 +52,6 @@ A 100/100 internal target requires evidenced acceptance, retrieval evaluation, s
 | Real semantic embedding evaluation, security audit, arbitrary-document robustness | Not completed | Future work |
 
 Deployed Render app commit 85c83967f539beb653d3d8ee55d2a207cb20027d; deploy dep-dc4nsiu1egvs73960i00 live. Pages branch commit 0a0d5ee508e2b64f90640780cac2f97e0ea8e21d. Historical pending entries above retained for provenance. MVP release acceptance is not production certification.
+
+## Completion regression — 2026-11-27
+[CI 46008069953](https://github.com/Netaniya/n25x-knowledge-engine/actions/runs/46008069953) passed Python/API with and without optional Qdrant, Docker, Chromium app smoke and standalone Pages smoke. Pages checkout tested at 390/1280 px; actual TXT download and content, custom test upload, source selection and removal verified. Mock semantic ranking with scope, consent and invalid-ID fallback, signed-cookie tampering and security headers passed. Live semantic provider acceptance and independent security audit remain separate. See [security scope](SECURITY.md).

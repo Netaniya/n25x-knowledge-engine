@@ -105,3 +105,6 @@
 
 ## 2026-11-27 — Portfolio MVP completion improvements
 - Added optional Groq semantic relevance ranking (up to 24 selected chunks, explicit consent, shared model budget, validated result IDs, lexical fallback). It is semantic LLM ranking, not dense vector indexing. Added temporary in-page research history (20 items, restore and clear, no automatic conversation context). Hardened cookie server expiry, write limits and public security headers; added mock ranking, tampered-cookie, header and browser-history tests. No hosting or provider billing changes. Real ranking validation and production audit remain pending.
+
+## 2026-11-27 — Completion regression and branch reconciliation
+- CI 46008069953 passed on 8e092efdfc62af6b5dee7e28c51846f60fbfc87d including standalone Pages export/viewport checks. Prior semantic ranking test failed due to a shadowed JSON import; fixed and reran. Main branch divergence inspected: only README DE/EN, static UI, work log and logo had changed; current feature files supersede older versions, main work log text is retained, and logo blob identical. Reconciliation retains both parent histories. Dependency audit workflow added; result pending. New code not asserted deployed until Render reports live.
