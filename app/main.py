@@ -4,7 +4,8 @@ from collections import Counter
 from contextlib import contextmanager
 from io import BytesIO
 from pathlib import Path
-from typing import Annotated
+from typing import Annotated, Literal
+from app import semantic
 import httpx
 from fastapi import FastAPI, File, HTTPException, UploadFile
 from fastapi.responses import FileResponse
@@ -47,6 +48,8 @@ class Question(BaseModel):
     top_k: int=Field(default=4,ge=1,le=8)
     generate: bool=False
     document_ids: list[str] | None = Field(default=None, max_length=2500)
+    search_mode: Literal['lexical','local','cloud']='lexical'
+    cloud_consent: bool=False
 
 @contextmanager
 def db(path):
@@ -79,11 +82,11 @@ def create_app(database=None):
     path.parent.mkdir(parents=True,exist_ok=True)
     with db(path) as conn:
         conn.executescript('''CREATE TABLE IF NOT EXISTS documents(id TEXT PRIMARY KEY, name TEXT NOT NULL, created TEXT DEFAULT CURRENT_TIMESTAMP); CREATE TABLE IF NOT EXISTS chunks(id INTEGER PRIMARY KEY, document_id TEXT NOT NULL REFERENCES documents(id) ON DELETE CASCADE, page INTEGER, ordinal INTEGER NOT NULL, text TEXT NOT NULL);''')
-    api=FastAPI(title='N25X Knowledge Engine',version='0.1.3')
+    api=FastAPI(title='N25X Knowledge Engine',version='0.2.0')
     @api.get('/')
     def home(): return FileResponse(ROOT/'static'/'index.html')
     @api.get('/api/health')
-    def health(): return {'status':'ok','version':'0.1.3','retrieval':'BM25','generation_available':bool(os.getenv('LLM_API_KEY') and os.getenv('LLM_MODEL'))}
+    def health(): return {'status':'ok','version':'0.2.0','retrieval':'BM25 / optional hybrid','embedding_providers':{p:semantic.configured(p) for p in ('local','cloud')},'generation_available':bool(os.getenv('LLM_API_KEY') and os.getenv('LLM_MODEL'))}
     @api.get('/api/documents')
     def list_docs():
         with db(path) as conn:
@@ -112,13 +115,25 @@ def create_app(database=None):
     @api.post('/api/ask')
     async def ask(query:Question):
         with db(path) as conn:
-            rows=conn.execute('SELECT c.document_id,c.page,c.ordinal,c.text,d.name FROM chunks c JOIN documents d ON d.id=c.document_id ORDER BY c.id').fetchall()
+            rows=conn.execute('SELECT c.id AS chunk_id,c.document_id,c.page,c.ordinal,c.text,d.name FROM chunks c JOIN documents d ON d.id=c.document_id ORDER BY c.id').fetchall()
         if query.document_ids is not None:
             selected=set(query.document_ids)
             rows=[row for row in rows if row['document_id'] in selected]
+        if query.search_mode=='cloud' and not query.cloud_consent:
+            raise HTTPException(400,'Cloud embedding requires explicit consent.')
         hits=retrieve(rows,query.question,query.top_k)
-        if not hits: return {'mode':'no_match','answer':'No matching passages found. / Keine passenden Textstellen gefunden.','sources':[]}
-        fallback={'mode':'retrieval','answer':'\n\n'.join(f"[{h['citation']}] {h['text']}" for h in hits),'sources':hits}
+        meta={'search_engine':'bm25','requested_search_mode':query.search_mode}
+        if query.search_mode!='lexical' and rows:
+            try:
+                lexical=retrieve(rows,query.question,max(20,query.top_k*3))
+                hits,engine=await semantic.hybrid(rows,query.question,lexical,query.top_k,query.search_mode)
+                meta.update(search_engine='hybrid_'+engine,embedding_provider=query.search_mode)
+            except Exception:
+                meta['search_warning']='semantic_unavailable'
+        for h in hits:
+            h.setdefault('score_type','bm25')
+        if not hits: return {'mode':'no_match','answer':'No matching passages found. / Keine passenden Textstellen gefunden.','sources':[],**meta}
+        fallback={'mode':'retrieval','answer':'\n\n'.join(f"[{h['citation']}] {h['text']}" for h in hits),'sources':hits,**meta}
         if not query.generate: return fallback
         key,model=os.getenv('LLM_API_KEY'),os.getenv('LLM_MODEL')
         if not key or not model: return dict(fallback,warning='LLM not configured; showing retrieved passages.')
@@ -131,7 +146,7 @@ def create_app(database=None):
                 answer=response.json()['choices'][0]['message']['content']
             refs=set(re.findall(r'\[(S\d+)\]',answer))
             if not refs or not refs <= {h['citation'] for h in hits}: return dict(fallback,warning='Generated citations missing or invalid; showing passages instead.')
-            return {'mode':'generated','answer':answer,'sources':hits}
+            return {'mode':'generated','answer':answer,'sources':hits,**meta}
         except Exception: return dict(fallback,warning='Generation unavailable; showing retrieved passages.')
     return api
 
