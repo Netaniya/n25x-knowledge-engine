@@ -18,3 +18,5 @@
 - Natalie Ragulina reported that she reviewed and tested v0.1.1 and found it broadly consistent with the agreed scope. Exact test cases, environment and evidence were not supplied; a second review is planned.
 - Owner requested German and English UI/documentation and further quality improvements. AI-assisted implementation adds persistent DE/EN selection, example data, source links and accessibility improvements. No private project code reused.
 - New acceptance scenarios are listed in docs/ACCEPTANCE.md; v0.1.2 is not marked accepted until independently verified.
+
+- Local working-copy validation: 13 pytest tests passed; JavaScript syntax check passed. Browser navigation blocked by execution environment; browser smoke test added to CI, result pending. No acceptance score claimed.
