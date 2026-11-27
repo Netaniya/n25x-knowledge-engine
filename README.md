@@ -1,6 +1,6 @@
 # N25X Knowledge Engine
 
-**Version 0.1.3 — local document retrieval MVP**
+**Version 0.2.0 — local document retrieval MVP**
 
 Project owner and initiator: Natalie Ragulina (Netaniya). Initial implementation developed with AI assistance. A standalone portfolio project for evidence-based document search. No private NETA25X Studio code or documents are included.
 
@@ -60,9 +60,9 @@ flowchart LR
 
 ## Current limitations / next milestones
 
-Local single-user demo only: no authentication, tenancy, OCR, streaming, rate limiting, or production security hardening. Lexical retrieval does not understand semantic paraphrases. PDF processing can be resource intensive; do not expose the upload endpoint publicly. The optional generator may still hallucinate even if citation IDs are valid; use source inspection and evaluation. No live model call was performed during initial testing. Docker and remote CI are not yet verified.
+Local single-user demo only: no authentication, tenancy, OCR, streaming, rate limiting, or production security hardening. Default lexical mode does not understand paraphrases; optional hybrid mode requires a configured embedding model. PDF processing can be resource intensive; do not expose the upload endpoint publicly. The optional generator may still hallucinate even if citation IDs are valid; use source inspection and evaluation. No live model call was performed during initial testing. Docker and remote CI are not yet verified.
 
-Next: semantic embeddings and Qdrant vector retrieval; LangChain integration; retrieval and answer evaluation; React/TypeScript frontend; CI verification; Kubernetes, observability and authenticated cloud demo. These are planned features, not current capabilities.
+Next: persistent Qdrant indexing and LangChain integration; retrieval and answer evaluation; React/TypeScript frontend; CI verification; Kubernetes, observability and authenticated cloud demo. These are planned features, not current capabilities.
 
 ## German portfolio description
 
@@ -75,3 +75,11 @@ See [work log](docs/WORK_LOG.md), [learning notes](docs/LEARNING.md) and [test r
 ## Scoped research and evidence export
 
 Select the documents to search, then choose 1, 2, 4, 6 or 8 passages. The API accepts optional `document_ids`: omitted/null means all, an empty list means no sources. Filtering takes place before ranking and optional generation. Each result shows its BM25 relevance score (not a confidence probability). Export the question, answer mode, answer and evidence to a UTF-8 text file locally; exported data may contain private document excerpts. The selected scope applies to the next query. Results are not translated automatically when the interface language changes.
+
+## Optional hybrid retrieval (v0.2.0 development)
+
+Default BM25 requires no model or network. For local embeddings run an OpenAI-compatible embedding service (e.g. Ollama with a multilingual embedding model installed); set LOCAL_EMBED_MODEL and optionally LOCAL_EMBED_BASE_URL (default http://127.0.0.1:11434/v1). Local mode accepts loopback or host.docker.internal only. Do not configure a proxy to a remote service if confidentiality is required.
+
+For optional cloud embeddings set CLOUD_EMBED_MODEL, CLOUD_EMBED_API_KEY and optionally CLOUD_EMBED_BASE_URL (HTTPS, default https://api.openai.com/v1). The user must explicitly select cloud and consent on each query. All selected passages, not only matched ones, may be sent; costs may apply. No automatic cloud fallback. Generation has a separate checkbox and configuration. Never commit secrets.
+
+Install `python -m pip install -r requirements-semantic.txt` to enable Qdrant local in-memory ranking; without it the implementation uses exact cosine ranking. Vectors are rebuilt per query, not persisted; max 128 selected chunks, otherwise lexical fallback. RRF combines ranks and is not confidence. A provisional cosine cutoff of 0.2 is not calibrated. Real multilingual quality and live provider integration are not yet validated. Docker and cloud deployment require further configuration and testing. See [ADR 0001](docs/adr/0001-hybrid-retrieval.md).
