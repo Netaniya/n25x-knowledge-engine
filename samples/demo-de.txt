@@ -1,0 +1,3 @@
+N25X Demo-Handbuch (fiktive Testdaten)
+Die reguläre Supportzeit ist Montag bis Freitag von 09:00 bis 17:00 Uhr. Kritische Störungen werden innerhalb von zwei Stunden bestätigt. Die Rückgabe von Testgeräten ist innerhalb von 14 Tagen möglich.
+Das Entwicklungsteam verwendet GitHub für Code-Reviews. Änderungen werden durch automatisierte Tests geprüft, bevor sie zusammengeführt werden.
