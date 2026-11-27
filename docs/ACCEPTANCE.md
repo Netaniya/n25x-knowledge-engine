@@ -30,3 +30,10 @@ A 100/100 internal target requires evidenced acceptance, retrieval evaluation, s
 | Russian query | Matches Russian source text | Pending full suite |
 | Evidence export | TXT contains original question and source excerpts | Pending browser test |
 | Relevance | Score marked BM25, not confidence | Pending browser test |
+
+## v0.2.0 hybrid acceptance (pending)
+
+- Lexical mode never contacts embedding endpoint; missing consent returns HTTP 400.
+- Local and consented cloud adapter: mock vector test, verify scoped sources and fallback.
+- Run tests with and without Qdrant installed. Verify actual local/hosted models with multilingual paraphrases and irrelevant questions. Measure Recall@k and false positives before claims about quality.
+- Review privacy controls: selected chunks are transmitted to the cloud only after consent. Confirm language and theme settings and offline fallback in browser.
