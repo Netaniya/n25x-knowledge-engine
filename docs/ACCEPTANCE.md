@@ -19,3 +19,14 @@ Run locally with Python as documented. Use only fictional sample data. Record ve
 ## Quality gates / Qualitätsziele
 
 A 100/100 internal target requires evidenced acceptance, retrieval evaluation, security review, accessibility, reproducible container deployment, observability, and real cloud validation. This is not a certification. The current MVP does not meet all gates.
+
+## v0.1.3 additions
+
+| Test | Expected | Status |
+|---|---|---|
+| Fresh session | German default; EN/RU selectable | Pending browser test |
+| Source scope | Excluded document never returned; empty selection returns no match | Backend test passed |
+| Result depth | Maximum selected number of results | Backend test passed |
+| Russian query | Matches Russian source text | Pending full suite |
+| Evidence export | TXT contains original question and source excerpts | Pending browser test |
+| Relevance | Score marked BM25, not confidence | Pending browser test |
