@@ -34,3 +34,6 @@
 ## 2026-11-27 — Owner code review, v0.1.3
 - Owner reports reviewing app/main.py, finding no errors during her inspection and considering the implementation consistent with agreed requirements. Reviewed file at recording time: blob 236881ff42187a8c665f80a04824168e679c3a0e. This is a self-reported manual code review, not a proof of absence of defects or a completed functional acceptance test.
 - Next design decision: choose the semantic retrieval architecture, including local versus hosted embeddings, multilingual requirements, and a measurable comparison against the existing BM25 baseline.
+
+## 2026-11-27 — Architecture decision and hybrid retrieval
+- Owner explicitly chose the combined local/cloud architecture. See docs/adr/0001-hybrid-retrieval.md. AI-assisted implementation adds provider adapters, source-scoped embeddings, rank fusion, local Qdrant option, fallback and consent controls. Code is in feature/hybrid-retrieval pending review. No live provider requests, model purchases or credentials added. Tests authored; execution and real-model quality still need confirmation.
