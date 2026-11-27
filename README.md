@@ -1,3 +1,11 @@
+# N25X NOESIS — portfolio MVP
+
+**[Live portfolio (GitHub Pages)](https://netaniya.github.io/n25x-knowledge-engine/) · [Live AI application](https://n25x-noesis.onrender.com/) · [Current implementation and documentation](https://github.com/Netaniya/n25x-knowledge-engine/tree/feature/hybrid-retrieval)**
+
+Project owner: Natalie Ragulina (Netaniya). AI-assisted development; contributions and acceptance are documented in the current implementation branch. The main branch below is the earlier local baseline, not the deployed release. Current release documentation: [English](https://github.com/Netaniya/n25x-knowledge-engine/blob/feature/hybrid-retrieval/README.md) · [Deutsch](https://github.com/Netaniya/n25x-knowledge-engine/blob/feature/hybrid-retrieval/README.de.md) · [Acceptance](https://github.com/Netaniya/n25x-knowledge-engine/blob/feature/hybrid-retrieval/docs/ACCEPTANCE.md).
+
+---
+
 ![N25X](branding/n25x-logo.webp)
 
 # N25X Knowledge Engine
