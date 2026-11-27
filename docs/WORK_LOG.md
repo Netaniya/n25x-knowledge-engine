@@ -53,3 +53,8 @@
 
 ## 2026-11-27 — Master brand identity
 - Project owner Natalie Ragulina (Netaniya) rejected earlier visual variants, specified a universal minimal N25X wordmark without extra symbols, chose the fifth monochrome concept as the starting point, requested blue tones and compact proportions, and explicitly approved the final blue design for all her GitHub projects. The compact web image is in branding/n25x-logo.webp. Full-resolution original saved separately. Trademark/design similarity clearance is pending.
+
+## 2026-11-27 — Chat-oriented workspace and regression coverage
+- Applied the previously owner-approved chat-oriented layout with a collapsible document library, visible N25X logo, NOESIS product title, and a question composer below the evidence area. Existing retrieval endpoints and controls preserved. Multi-turn chat history is not implemented yet.
+- Prior logo-bearing branch commit 7130bd848e36ae3cb15d25c2fb6db4175c0d6e28 passed GitHub Actions run 45988132952, including two pytest stages, Docker and Chromium smoke. The main-branch run 45988124488 failed at Chromium installation, not at pytest or Docker.
+- Added browser acceptance checks for logo decoding, toggling the document library, disabled unconfigured providers, manual TXT upload, individual selection, select-all, source scoping, and API documentation navigation. Execution of the expanded suite is pending at commit time. This implementation and test authoring are AI-assisted; the owner independently supplies the next test scenario and acceptance result.
