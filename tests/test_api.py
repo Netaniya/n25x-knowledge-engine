@@ -149,3 +149,37 @@ def test_fusion():
     rows=[{'chunk_id':1,'text':'a'},{'chunk_id':2,'text':'b'}]
     hits=fuse(rows,[rows[1]],[(1,.8),(0,.7)],2)
     assert hits[0]['chunk_id']==2 and hits[0]['citation']=='S1'
+
+def test_answer_scope_separates_model_knowledge(client,monkeypatch):
+    import httpx
+    monkeypatch.setenv('LLM_API_KEY','test-key')
+    monkeypatch.setenv('LLM_MODEL','test-model')
+    add(client,'Support hours are 09:00 to 17:00. Secret test marker.','manual.txt')
+    calls=[]
+    output={'text':'General support practices vary.'}
+    class MockClient:
+        def __init__(self,*args,**kwargs): pass
+        async def __aenter__(self): return self
+        async def __aexit__(self,*args): pass
+        async def post(self,url,**kwargs):
+            calls.append(kwargs['json'])
+            return httpx.Response(200,json={'choices':[{'message':{'content':output['text']}}]},request=httpx.Request('POST',url))
+    monkeypatch.setattr(httpx,'AsyncClient',MockClient)
+    q={'question':'support hours'}
+    result=client.post('/api/ask',json=q).json()
+    assert result['answer_scope']=='documents' and 'general_answer' not in result and not calls
+    assert client.post('/api/ask',json=dict(q,answer_scope='combined')).status_code==400
+    assert not calls
+    q.update(answer_scope='combined',general_consent=True)
+    result=client.post('/api/ask',json=q).json()
+    assert result['mode']=='retrieval' and '17:00' in result['answer']
+    assert result['general_answer']==output['text'] and result['general_status']=='available'
+    assert len(calls)==1 and calls[0]['messages'][-1]['content']=='support hours'
+    assert 'Secret test marker' not in str(calls)
+    result=client.post('/api/ask',json=dict(q,question='Quantenmechanik',document_ids=[])).json()
+    assert result['mode']=='no_match' and result['sources']==[] and result['general_answer']
+    output['text']='Invented document citation [S99]'
+    assert client.post('/api/ask',json=q).json()['general_status']=='unavailable'
+    monkeypatch.delenv('LLM_API_KEY')
+    result=client.post('/api/ask',json=q).json()
+    assert result['mode']=='retrieval' and result['general_status']=='unavailable' and result['general_answer'] is None

@@ -63,3 +63,8 @@
 - Owner inspected a static mobile preview and rejected its narrow presentation and lack of interaction; requested a real full-width, interactive mobile workspace. A static image is not an accepted functional demo.
 - AI-assisted change: default collapsed library on narrow screens, viewport-width workspace with 8px gutters, compact settings grid, larger touch targets and 16px question input. The browser suite now verifies initial mobile state and width. Public deployment is still unavailable.
 - Prior expanded CI run 45990041237 failed at the disabled local-provider assertion; Python and Docker passed. Changed provider controls to start disabled until health confirms configuration and changed the test to check the reflected disabled attribute. New CI result pending.
+
+## 2026-11-27 — Owner decision: answer scope C
+- Natalie Ragulina (Netaniya) selected option C: switch between document-only answers and document results plus separate general AI knowledge. This is an explicit owner product and behavior decision.
+- AI-assisted implementation: document-only default, separate answer scope and per-request consent for additional model call, question-only general request, separate unverified output and export, unavailable-provider handling. Existing grounded generation remains independently selectable. General knowledge is not presented as document evidence; no live model has been used to validate output quality.
+- Mobile UX commit e0f88f06c6b172bc562e9858d8bddea819ec1bfe passed GitHub Actions run 45990594548. New mode tests added; execution pending. Owner's next task is to specify independent positive and negative acceptance examples.

@@ -50,6 +50,8 @@ class Question(BaseModel):
     document_ids: list[str] | None = Field(default=None, max_length=2500)
     search_mode: Literal['lexical','local','cloud']='lexical'
     cloud_consent: bool=False
+    answer_scope: Literal['documents','combined']='documents'
+    general_consent: bool=False
 
 @contextmanager
 def db(path):
@@ -112,8 +114,7 @@ def create_app(database=None):
         with db(path) as conn:
             if not conn.execute('DELETE FROM documents WHERE id=?',(ident,)).rowcount: raise HTTPException(404,'Document not found.')
         return {'deleted':True}
-    @api.post('/api/ask')
-    async def ask(query:Question):
+    async def document_answer(query:Question):
         with db(path) as conn:
             rows=conn.execute('SELECT c.id AS chunk_id,c.document_id,c.page,c.ordinal,c.text,d.name FROM chunks c JOIN documents d ON d.id=c.document_id ORDER BY c.id').fetchall()
         if query.document_ids is not None:
@@ -148,6 +149,30 @@ def create_app(database=None):
             if not refs or not refs <= {h['citation'] for h in hits}: return dict(fallback,warning='Generated citations missing or invalid; showing passages instead.')
             return {'mode':'generated','answer':answer,'sources':hits,**meta}
         except Exception: return dict(fallback,warning='Generation unavailable; showing retrieved passages.')
+    @api.post('/api/ask')
+    async def ask(query:Question):
+        if query.answer_scope=='combined' and not query.general_consent:
+            raise HTTPException(400,'General model knowledge requires explicit consent.')
+        result=await document_answer(query)
+        result['answer_scope']=query.answer_scope
+        if query.answer_scope=='documents':
+            return result
+        # Separate request, question only. Never send document passages to this call.
+        result['general_status']='unavailable'
+        result['general_answer']=None
+        key,model=os.getenv('LLM_API_KEY'),os.getenv('LLM_MODEL')
+        if not key or not model:
+            return result
+        try:
+            async with httpx.AsyncClient(timeout=35) as client:
+                response=await client.post(os.getenv('LLM_BASE_URL','https://api.openai.com/v1').rstrip('/')+'/chat/completions',headers={'Authorization':'Bearer '+key},json={'model':model,'messages':[{'role':'system','content':'Provide a concise general-knowledge answer in the question language. You have not received any user documents. Do not claim to have read them, invent document citations, or imply this answer is source-verified. State uncertainty where relevant.'},{'role':'user','content':query.question}]})
+                response.raise_for_status()
+                answer=response.json()['choices'][0]['message']['content']
+            if isinstance(answer,str) and answer.strip() and not re.search(r'\[S\d+\]',answer):
+                result.update(general_status='available',general_answer=answer.strip())
+        except Exception:
+            pass
+        return result
     return api
 
 app=create_app()
