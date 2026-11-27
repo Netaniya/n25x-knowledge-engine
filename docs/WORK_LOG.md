@@ -20,3 +20,8 @@
 - New acceptance scenarios are listed in docs/ACCEPTANCE.md; v0.1.2 is not marked accepted until independently verified.
 
 - Local working-copy validation: 13 pytest tests passed; JavaScript syntax check passed. Browser navigation blocked by execution environment; browser smoke test added to CI, result pending. No acceptance score claimed.
+
+## 2026-11-27 — Trilingual research controls (v0.1.3)
+- Owner requested Russian as an optional third language, retaining German as the default, and comparison with leading document intelligence applications.
+- AI-assisted implementation adds source selection, server-side source scoping, configurable result depth, visible BM25 relevance and local evidence export. Benchmark references: docs/BENCHMARK.md.
+- Local backend test run: 13 passed, 2 UI-dependent cases deselected. Git blob hashes for backend and tests match the published files. End-to-end acceptance and cloud deployment remain pending.
