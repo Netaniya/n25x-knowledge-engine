@@ -53,6 +53,21 @@ with tempfile.TemporaryDirectory() as directory:
             page.locator("#ask button").click()
             expect(page.locator("#answer")).to_contain_text("17:00")
             page.locator("#theme").select_option("light")
+            page.locator("#language").select_option("ru")
+            expect(page.locator("[data-i=library]")).to_have_text("Библиотека документов")
+            page.locator("#demo").click()
+            expect(page.locator("#question")).to_have_value("Какое время поддержки?")
+            page.locator("#depth").select_option("1")
+            page.locator("#ask button").click()
+            expect(page.locator("#answer")).to_contain_text("17:00")
+            with page.expect_download() as download:
+                page.locator("#export").click()
+            assert download.value.suggested_filename == "n25x-research.txt"
+            page.locator("#none").click()
+            page.locator("#ask button").click()
+            expect(page.locator("#answer")).to_have_text("Подходящих фрагментов не найдено.")
+            page.reload()
+            expect(page.locator("#language")).to_have_value("ru")
             assert not errors, errors
             browser.close()
             print("Browser smoke passed")
