@@ -14,3 +14,6 @@ jobs:
       - run: pip install -r requirements-dev.txt
       - run: python -m pytest -q
       - run: docker build -t knowledge-engine:ci .
+      - run: pip install playwright==1.57.0
+      - run: python -m playwright install --with-deps chromium
+      - run: python scripts/browser_smoke.py
