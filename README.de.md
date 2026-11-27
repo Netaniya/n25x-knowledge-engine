@@ -2,7 +2,7 @@
 
 [English](README.md) · Deutsch
 
-**Version 0.1.2 — lokaler Prototyp für dokumentenbasierte Recherche**
+**Version 0.1.3 — lokaler Prototyp für dokumentenbasierte Recherche**
 
 Projektinitiatorin und Verantwortliche: Natalie Ragulina (Netaniya). Die Implementierung erfolgt KI-gestützt. Der öffentliche Prototyp ist von den privaten Studio-Projekten getrennt.
 
@@ -10,7 +10,7 @@ Projektinitiatorin und Verantwortliche: Natalie Ragulina (Netaniya). Die Impleme
 
 - PDF (textbasiert), TXT und Markdown bis 5 MB, maximal 150 PDF-Seiten.
 - Textabschnitte und Seitenreferenzen in SQLite; BM25-Suche mit Quellen.
-- Deutsche und englische Oberfläche, drei Farbschemata, gespeicherte Einstellungen.
+- Deutsche (Standard), englische und russische Oberfläche, drei Farbschemata, gespeicherte Einstellungen.
 - Fiktives Beispieldokument und direkt anklickbare Quellenverweise.
 - Optionaler LLM-Endpunkt für generierte Antworten; ohne Schlüssel reine Textsuche.
 - REST-API, OpenAPI, automatisierte Tests, Docker- und CI-Konfiguration.
@@ -41,3 +41,7 @@ Lokale Einzelbenutzer-Anwendung ohne Anmeldung, Mandantentrennung oder produktio
 ## Zusammenarbeit und Qualität
 
 [Arbeitsjournal](docs/WORK_LOG.md) · [Abnahmetests / Acceptance](docs/ACCEPTANCE.md) · [Architektur (EN)](README.md#architecture). Die erste manuelle Prüfung durch die Projektverantwortliche wurde berichtet; Details und erneute Abnahme folgen. Es wurde noch keine Open-Source-Lizenz gewählt.
+
+## Gezielte Recherche und Export
+
+Wähle die gewünschten Dokumente und maximal 1, 2, 4, 6 oder 8 Treffer. Die API filtert vor dem Ranking und vor der optionalen KI-Generierung. Die BM25-Werte sind Relevanzwerte, keine Vertrauenswahrscheinlichkeiten. Der lokale TXT-Export enthält Frage, Antwortmodus, Antwort und Quellen. Exportierte Auszüge können vertrauliche Daten enthalten. Die Dokumentauswahl gilt für die nächste Anfrage; ein Sprachwechsel übersetzt keine Dokumentinhalte.
