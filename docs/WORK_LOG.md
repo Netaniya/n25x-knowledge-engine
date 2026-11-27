@@ -102,3 +102,6 @@
 
 ## 2026-11-27 — Portfolio MVP documentation reconciliation
 - Owner requested completion review. Both public URLs are operational based on prior live checks; attribution update deployed on Render and observed on Pages. Updated DE/EN README, acceptance and competitor comparison to current scope. Historical records retained. This is a portfolio MVP, not a production release or quantified authorship audit. Main branch still differs; current application implementation is feature/hybrid-retrieval; Pages uses portfolio-demo. No other projects changed.
+
+## 2026-11-27 — Portfolio MVP completion improvements
+- Added optional Groq semantic relevance ranking (up to 24 selected chunks, explicit consent, shared model budget, validated result IDs, lexical fallback). It is semantic LLM ranking, not dense vector indexing. Added temporary in-page research history (20 items, restore and clear, no automatic conversation context). Hardened cookie server expiry, write limits and public security headers; added mock ranking, tampered-cookie, header and browser-history tests. No hosting or provider billing changes. Real ranking validation and production audit remain pending.

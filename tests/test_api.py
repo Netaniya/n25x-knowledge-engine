@@ -255,3 +255,43 @@ def test_public_ai_consent_budget_and_separation(tmp_path,monkeypatch):
     monkeypatch.setenv('LLM_BASE_URL','https://example.test')
     assert not c.get('/api/health').json()['generation_available']
     assert c.post('/api/ask',json=q).status_code==400
+
+def test_public_meaning_ranking_and_security(tmp_path,monkeypatch):
+    import httpx
+    monkeypatch.setenv('N25X_PUBLIC_AI','1')
+    monkeypatch.setenv('LLM_API_KEY','test-key')
+    monkeypatch.setenv('LLM_MODEL','openai/gpt-oss-20b')
+    monkeypatch.setenv('LLM_BASE_URL','https://api.groq.com/openai/v1')
+    app=create_app(tmp_path/'semantic.db',public_demo=True)
+    c=TestClient(app,base_url='https://demo.test')
+    page=c.get('/')
+    assert "script-src 'sha256-" in page.headers['content-security-policy']
+    assert page.headers['x-frame-options']=='DENY'
+    assert 'HttpOnly' in page.headers['set-cookie'] and 'Secure' in page.headers['set-cookie']
+    ident=add(c,'Fernarbeit ist gestattet.','remote.txt').json()['id']
+    add(c,'Katzen schlafen.','cats.txt')
+    assert c.get('/api/health').json()['meaning_available']
+    calls=[]
+    output={'value':'{"ids":[1]}'}
+    class MockClient:
+        def __init__(self,*args,**kwargs): pass
+        async def __aenter__(self): return self
+        async def __aexit__(self,*args): pass
+        async def post(self,url,**kwargs):
+            calls.append(kwargs['json'])
+            return httpx.Response(200,json={'choices':[{'message':{'content':output['value']}}]},request=httpx.Request('POST',url))
+    monkeypatch.setattr(httpx,'AsyncClient',MockClient)
+    q={'question':'Homeoffice','document_ids':[ident],'search_mode':'meaning'}
+    assert c.post('/api/ask',json=q).status_code==400 and not calls
+    q['cloud_consent']=True
+    r=c.post('/api/ask',json=q).json()
+    assert r['search_engine']=='llm_semantic' and r['sources'][0]['score_type']=='rank'
+    assert r['sources'][0]['document_id']==ident and 'Katzen' not in str(calls)
+    output['value']='{"ids":[999]}'
+    r=c.post('/api/ask',json=dict(q,question='Fernarbeit')).json()
+    assert r['search_engine']=='bm25' and r['search_warning']=='semantic_unavailable'
+    cookie=c.cookies.get('n25x_demo')
+    other=TestClient(app,base_url='https://demo.test')
+    other.cookies.set('n25x_demo',cookie[:-1]+('a' if cookie[-1]!='a' else 'b'))
+    assert other.get('/api/documents').json()==[]
+    assert c.get('/api/documents').json()
