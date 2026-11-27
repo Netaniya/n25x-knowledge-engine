@@ -37,3 +37,6 @@
 
 ## 2026-11-27 — Architecture decision and hybrid retrieval
 - Owner explicitly chose the combined local/cloud architecture. See docs/adr/0001-hybrid-retrieval.md. AI-assisted implementation adds provider adapters, source-scoped embeddings, rank fusion, local Qdrant option, fallback and consent controls. Code is in feature/hybrid-retrieval pending review. No live provider requests, model purchases or credentials added. Tests authored; execution and real-model quality still need confirmation.
+
+## 2026-11-27 — Owner inspection of hybrid development branch
+- Owner reports opening and reviewing the proposed implementation. No specific defect findings or executed test cases reported at this stage. Next owner task: author independent multilingual retrieval test cases with expected evidence and negative controls, then review actual results before acceptance.
