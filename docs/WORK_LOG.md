@@ -40,3 +40,7 @@
 
 ## 2026-11-27 — Owner inspection of hybrid development branch
 - Owner reports opening and reviewing the proposed implementation. No specific defect findings or executed test cases reported at this stage. Next owner task: author independent multilingual retrieval test cases with expected evidence and negative controls, then review actual results before acceptance.
+
+## 2026-11-27 — Product naming decision
+- Natalie Ragulina (Netaniya), project owner, selected N25X NOESIS from seven proposed names. This is her explicit product and creative decision. The name refers to understanding and intellectual analysis.
+- Naming selection is recorded; trademark/domain clearance and actual rebranding are not yet completed. Existing repository name remains unchanged.
