@@ -78,3 +78,8 @@
 - Owner opened the deployed Render application and submitted 'Как загрузить документы' and 'Как пользоваться'. Both produced no-match results. Owner identified missing onboarding and expected operational guidance. This is direct human functional feedback, not an AI-authored finding.
 - AI-assisted UI changes: visible three-language quick guide, one-click sample upload and real BM25 search, library shortcut, explicit empty-selection guidance and accurate public demo disclosure. Recognized common help questions display a labelled static guide, not simulated LLM output. No model or hosting plan changes.
 - Added browser assertions for Russian help, library shortcut and sample search. Deployment is pending a passing run and separate authorization.
+
+## 2026-11-27 — Owner requests actual AI integration
+- Owner identified unavailable combined mode and inability to answer a general purpose question in the live demo. Requested AI integration work be handled by assistant.
+- Prepared opt-in Groq GPT-OSS 20B public generation, preserving signed-session isolation and independent consent for general questions and grounded generation. Embedding providers remain disabled in public mode. Limits: 3 model calls/minute globally, 30/24h globally, 6/24h per browser session, 768 completion tokens per call. Counters are temporary SQLite and may reset on free-host storage loss. Provider free-tier limits remain independent.
+- Mocked consent, endpoint restriction, no document transmission for general answers, budget and fallback tests added. No account, credential or real inference verified yet; existing live version remains unchanged pending CI and secret configuration.

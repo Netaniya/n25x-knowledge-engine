@@ -185,6 +185,7 @@ def test_answer_scope_separates_model_knowledge(client,monkeypatch):
     assert result['mode']=='retrieval' and result['general_status']=='unavailable' and result['general_answer'] is None
 
 def test_public_demo_session_isolation(tmp_path,monkeypatch):
+    monkeypatch.delenv('N25X_PUBLIC_AI',raising=False)
     monkeypatch.setenv('LLM_API_KEY','test-key')
     monkeypatch.setenv('LLM_MODEL','test-model')
     app=create_app(tmp_path/'demo.db',public_demo=True)
@@ -206,3 +207,51 @@ def test_public_demo_session_isolation(tmp_path,monkeypatch):
     assert a.post('/api/ask',json={'question':'Kestrel'},headers={'Origin':'https://other.test'}).status_code==403
     assert a.delete('/api/documents/'+ident).status_code==200
     assert a.get('/api/documents').json()==[]
+
+def test_public_ai_consent_budget_and_separation(tmp_path,monkeypatch):
+    import httpx
+    from app.main import db
+    monkeypatch.setenv('N25X_PUBLIC_AI','1')
+    monkeypatch.setenv('LLM_API_KEY','test-key')
+    monkeypatch.setenv('LLM_MODEL','openai/gpt-oss-20b')
+    monkeypatch.setenv('LLM_BASE_URL','https://api.groq.com/openai/v1')
+    path=tmp_path/'ai.db'
+    c=TestClient(create_app(path,public_demo=True),base_url='https://demo.test')
+    c.get('/')
+    assert c.get('/api/health').json()['generation_available']
+    add(c,'Private test marker Kestrel-481.','sample.txt')
+    calls=[]
+    class MockClient:
+        def __init__(self,*args,**kwargs): pass
+        async def __aenter__(self): return self
+        async def __aexit__(self,*args): pass
+        async def post(self,url,**kwargs):
+            calls.append(kwargs['json'])
+            assert url=='https://api.groq.com/openai/v1/chat/completions'
+            assert kwargs['json']['max_completion_tokens']==768
+            return httpx.Response(200,json={'choices':[{'message':{'content':'General response.'}}]},request=httpx.Request('POST',url))
+    monkeypatch.setattr(httpx,'AsyncClient',MockClient)
+    q={'question':'Kestrel','answer_scope':'combined'}
+    assert c.post('/api/ask',json=q).status_code==400
+    assert not calls
+    q['general_consent']=True
+    for _ in range(3):
+        r=c.post('/api/ask',json=q).json()
+        assert r['general_status']=='available'
+        assert 'Kestrel-481' in r['answer']
+    assert len(calls)==3 and 'Private test marker' not in str(calls)
+    r=c.post('/api/ask',json=q).json()
+    assert r['general_status']=='limit' and r['mode']=='retrieval' and len(calls)==3
+    with db(path) as conn:
+        conn.execute("UPDATE demo_model_usage SET created=datetime('now','-2 minutes')")
+    for _ in range(3):
+        assert c.post('/api/ask',json=q).json()['general_status']=='available'
+    with db(path) as conn:
+        conn.execute("UPDATE demo_model_usage SET created=datetime('now','-2 minutes')")
+    assert c.post('/api/ask',json=q).json()['general_status']=='limit'
+    assert len(calls)==6
+    assert c.post('/api/ask',json={'question':'Kestrel','search_mode':'cloud','cloud_consent':True}).status_code==400
+    assert c.post('/api/ask',json={'question':'Kestrel'}).json()['mode']=='retrieval'
+    monkeypatch.setenv('LLM_BASE_URL','https://example.test')
+    assert not c.get('/api/health').json()['generation_available']
+    assert c.post('/api/ask',json=q).status_code==400
