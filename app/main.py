@@ -1,5 +1,5 @@
 """Local, single-user document retrieval and grounded answers."""
-import math, os, re, sqlite3, uuid
+import math, os, re, sqlite3, uuid, secrets, hmac, hashlib
 from collections import Counter
 from contextlib import contextmanager
 from io import BytesIO
@@ -7,8 +7,8 @@ from pathlib import Path
 from typing import Annotated, Literal
 from app import semantic
 import httpx
-from fastapi import FastAPI, File, HTTPException, UploadFile
-from fastapi.responses import FileResponse
+from fastapi import FastAPI, File, HTTPException, UploadFile, Request
+from fastapi.responses import FileResponse, JSONResponse
 from pydantic import BaseModel, Field
 from pypdf import PdfReader
 
@@ -79,25 +79,68 @@ def retrieve(rows, question, k):
     hits.sort(key=lambda p:p[0],reverse=True)
     return [dict(r,score=round(s,4),citation=f'S{i}') for i,(s,r) in enumerate(hits[:k],1)]
 
-def create_app(database=None):
+def create_app(database=None, public_demo=None):
+    demo=(os.getenv('N25X_PUBLIC_DEMO')=='1') if public_demo is None else public_demo
+    secret=secrets.token_bytes(32)
+    def signature(token):
+        return hmac.new(secret,token.encode('ascii'),hashlib.sha256).hexdigest()
+    def session(value):
+        if value and re.fullmatch(r'[a-f0-9]{64}\.[a-f0-9]{64}',value):
+            token,mac=value.split('.')
+            if hmac.compare_digest(mac,signature(token)):
+                return token,False
+        return secrets.token_hex(32),True
+
     path=Path(database or os.getenv('N25X_DB','data/knowledge.sqlite3'))
     path.parent.mkdir(parents=True,exist_ok=True)
     with db(path) as conn:
         conn.executescript('''CREATE TABLE IF NOT EXISTS documents(id TEXT PRIMARY KEY, name TEXT NOT NULL, created TEXT DEFAULT CURRENT_TIMESTAMP); CREATE TABLE IF NOT EXISTS chunks(id INTEGER PRIMARY KEY, document_id TEXT NOT NULL REFERENCES documents(id) ON DELETE CASCADE, page INTEGER, ordinal INTEGER NOT NULL, text TEXT NOT NULL);''')
-    api=FastAPI(title='N25X Knowledge Engine',version='0.2.0')
+        if 'owner' not in {r['name'] for r in conn.execute('PRAGMA table_info(documents)')}:
+            conn.execute("ALTER TABLE documents ADD COLUMN owner TEXT NOT NULL DEFAULT 'local'")
+        conn.execute('CREATE INDEX IF NOT EXISTS documents_owner ON documents(owner)')
+    api=FastAPI(title='N25X NOESIS',version='0.2.0')
+    @api.middleware('http')
+    async def isolate(request:Request,call_next):
+        request.state.owner='local'
+        if not demo:
+            return await call_next(request)
+        # A public demo never shares document libraries across browser sessions.
+        token,fresh=session(request.cookies.get('n25x_demo'))
+        request.state.owner=token
+        if request.method=='POST':
+            limit=1100000 if request.url.path=='/api/documents' else 65536
+            length=request.headers.get('content-length','')
+            if not length.isdigit() or int(length)>limit:
+                return JSONResponse({'detail':'Demo request too large or length missing.'},status_code=413)
+        if request.method in ('POST','DELETE') and request.headers.get('origin'):
+            from urllib.parse import urlsplit
+            origin=urlsplit(request.headers['origin'])
+            if origin.scheme!='https' or origin.netloc!=request.headers.get('host'):
+                return JSONResponse({'detail':'Cross-origin write rejected.'},status_code=403)
+        if request.url.path.startswith('/api/') and request.url.path!='/api/health':
+            with db(path) as conn:
+                conn.execute("DELETE FROM documents WHERE owner!='local' AND created < datetime('now','-1 day')")
+        response=await call_next(request)
+        if fresh and (request.url.path=='/' or request.url.path.startswith('/api/documents') or request.url.path=='/api/ask'):
+            response.set_cookie('n25x_demo',token+'.'+signature(token),max_age=86400,secure=True,httponly=True,samesite='strict')
+        response.headers['Cache-Control']='no-store'
+        return response
     @api.get('/')
     def home(): return FileResponse(ROOT/'static'/'index.html')
     @api.get('/api/health')
-    def health(): return {'status':'ok','version':'0.2.0','retrieval':'BM25 / optional hybrid','embedding_providers':{p:semantic.configured(p) for p in ('local','cloud')},'generation_available':bool(os.getenv('LLM_API_KEY') and os.getenv('LLM_MODEL'))}
+    def health(): return {'status':'ok','version':'0.2.0','retrieval':'BM25 / optional hybrid','public_demo':demo,'embedding_providers':{p:(not demo and semantic.configured(p)) for p in ('local','cloud')},'generation_available':bool(not demo and os.getenv('LLM_API_KEY') and os.getenv('LLM_MODEL'))}
     @api.get('/api/documents')
-    def list_docs():
+    def list_docs(request:Request):
         with db(path) as conn:
-            return [dict(r) for r in conn.execute('SELECT d.id,d.name,d.created,count(c.id) AS chunks FROM documents d LEFT JOIN chunks c ON c.document_id=d.id GROUP BY d.id ORDER BY d.created DESC')]
+            return [dict(r) for r in conn.execute('SELECT d.id,d.name,d.created,count(c.id) AS chunks FROM documents d LEFT JOIN chunks c ON c.document_id=d.id WHERE d.owner=? GROUP BY d.id ORDER BY d.created DESC',(request.state.owner,))]
     @api.post('/api/documents',status_code=201)
-    async def upload(file: Annotated[UploadFile,File()]):
+    async def upload(request:Request,file: Annotated[UploadFile,File()]):
         name=(file.filename or 'document').replace('\\','/').split('/')[-1][:200]
-        raw=await file.read(LIMIT+1)
-        if len(raw)>LIMIT: raise HTTPException(413,'File exceeds 5 MB.')
+        if demo and Path(name).suffix.lower() not in {'.txt','.md'}:
+            raise HTTPException(422,'Public demo accepts TXT and Markdown only.')
+        limit=1024*1024 if demo else LIMIT
+        raw=await file.read(limit+1)
+        if len(raw)>limit: raise HTTPException(413,'File exceeds upload limit.')
         try:
             data=[(p,i,t) for p,s in extract(name,raw) for i,t in enumerate(chunks(s),1) if t]
         except Exception as exc: raise HTTPException(422,'Unable to read document. Use an unencrypted text PDF or UTF-8 TXT/MD.') from exc
@@ -105,18 +148,26 @@ def create_app(database=None):
         if len(data)>MAX_CHUNKS: raise HTTPException(413,'Document exceeds chunk limit.')
         ident=uuid.uuid4().hex
         with db(path) as conn:
-            if conn.execute('SELECT count(*) FROM chunks').fetchone()[0]+len(data)>MAX_CHUNKS: raise HTTPException(413,'Library chunk limit reached; delete some documents.')
-            conn.execute('INSERT INTO documents(id,name) VALUES (?,?)',(ident,name))
+            conn.execute('BEGIN IMMEDIATE')
+            owner=request.state.owner
+            count=conn.execute('SELECT count(*) FROM chunks c JOIN documents d ON d.id=c.document_id WHERE d.owner=?',(owner,)).fetchone()[0]
+            if count+len(data)>(100 if demo else MAX_CHUNKS): raise HTTPException(413,'Library chunk limit reached; delete some documents.')
+            if demo:
+                if conn.execute('SELECT count(*) FROM documents WHERE owner=?',(owner,)).fetchone()[0]>=10:
+                    raise HTTPException(413,'Demo document limit reached.')
+                if conn.execute('SELECT count(*) FROM chunks').fetchone()[0]+len(data)>10000 or conn.execute('SELECT count(*) FROM documents').fetchone()[0]>=2000:
+                    raise HTTPException(503,'Demo capacity reached.')
+            conn.execute('INSERT INTO documents(id,name,owner) VALUES (?,?,?)',(ident,name,owner))
             conn.executemany('INSERT INTO chunks(document_id,page,ordinal,text) VALUES (?,?,?,?)',[(ident,*v) for v in data])
         return {'id':ident,'name':name,'chunks':len(data)}
     @api.delete('/api/documents/{ident}')
-    def delete(ident:str):
+    def delete(ident:str,request:Request):
         with db(path) as conn:
-            if not conn.execute('DELETE FROM documents WHERE id=?',(ident,)).rowcount: raise HTTPException(404,'Document not found.')
+            if not conn.execute('DELETE FROM documents WHERE id=? AND owner=?',(ident,request.state.owner)).rowcount: raise HTTPException(404,'Document not found.')
         return {'deleted':True}
-    async def document_answer(query:Question):
+    async def document_answer(query:Question,owner:str):
         with db(path) as conn:
-            rows=conn.execute('SELECT c.id AS chunk_id,c.document_id,c.page,c.ordinal,c.text,d.name FROM chunks c JOIN documents d ON d.id=c.document_id ORDER BY c.id').fetchall()
+            rows=conn.execute('SELECT c.id AS chunk_id,c.document_id,c.page,c.ordinal,c.text,d.name FROM chunks c JOIN documents d ON d.id=c.document_id WHERE d.owner=? ORDER BY c.id',(owner,)).fetchall()
         if query.document_ids is not None:
             selected=set(query.document_ids)
             rows=[row for row in rows if row['document_id'] in selected]
@@ -150,10 +201,12 @@ def create_app(database=None):
             return {'mode':'generated','answer':answer,'sources':hits,**meta}
         except Exception: return dict(fallback,warning='Generation unavailable; showing retrieved passages.')
     @api.post('/api/ask')
-    async def ask(query:Question):
+    async def ask(query:Question,request:Request):
+        if demo and (query.generate or query.search_mode!='lexical' or query.answer_scope!='documents'):
+            raise HTTPException(400,'External models are disabled in the public demo.')
         if query.answer_scope=='combined' and not query.general_consent:
             raise HTTPException(400,'General model knowledge requires explicit consent.')
-        result=await document_answer(query)
+        result=await document_answer(query,request.state.owner)
         result['answer_scope']=query.answer_scope
         if query.answer_scope=='documents':
             return result

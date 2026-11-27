@@ -183,3 +183,26 @@ def test_answer_scope_separates_model_knowledge(client,monkeypatch):
     monkeypatch.delenv('LLM_API_KEY')
     result=client.post('/api/ask',json=q).json()
     assert result['mode']=='retrieval' and result['general_status']=='unavailable' and result['general_answer'] is None
+
+def test_public_demo_session_isolation(tmp_path,monkeypatch):
+    monkeypatch.setenv('LLM_API_KEY','test-key')
+    monkeypatch.setenv('LLM_MODEL','test-model')
+    app=create_app(tmp_path/'demo.db',public_demo=True)
+    a=TestClient(app,base_url='https://demo.test')
+    b=TestClient(app,base_url='https://demo.test')
+    assert a.get('/').status_code==200 and b.get('/').status_code==200
+    assert a.cookies.get('n25x_demo')!=b.cookies.get('n25x_demo')
+    ident=add(a,'Private test marker Kestrel-481.','a.txt').json()['id']
+    assert len(a.get('/api/documents').json())==1
+    assert b.get('/api/documents').json()==[]
+    assert b.post('/api/ask',json={'question':'Kestrel','document_ids':[ident]}).json()['mode']=='no_match'
+    assert b.delete('/api/documents/'+ident).status_code==404
+    assert 'Kestrel-481' in a.post('/api/ask',json={'question':'Kestrel'}).json()['answer']
+    health=a.get('/api/health').json()
+    assert health['public_demo'] and not health['generation_available'] and not any(health['embedding_providers'].values())
+    assert a.post('/api/ask',json={'question':'Kestrel','generate':True}).status_code==400
+    assert a.post('/api/ask',json={'question':'Kestrel','answer_scope':'combined','general_consent':True}).status_code==400
+    assert a.post('/api/documents',files={'file':('test.pdf',b'%PDF-1.0','application/pdf')}).status_code==422
+    assert a.post('/api/ask',json={'question':'Kestrel'},headers={'Origin':'https://other.test'}).status_code==403
+    assert a.delete('/api/documents/'+ident).status_code==200
+    assert a.get('/api/documents').json()==[]

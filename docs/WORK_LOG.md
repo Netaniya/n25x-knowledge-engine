@@ -68,3 +68,8 @@
 - Natalie Ragulina (Netaniya) selected option C: switch between document-only answers and document results plus separate general AI knowledge. This is an explicit owner product and behavior decision.
 - AI-assisted implementation: document-only default, separate answer scope and per-request consent for additional model call, question-only general request, separate unverified output and export, unavailable-provider handling. Existing grounded generation remains independently selectable. General knowledge is not presented as document evidence; no live model has been used to validate output quality.
 - Mobile UX commit e0f88f06c6b172bc562e9858d8bddea819ec1bfe passed GitHub Actions run 45990594548. New mode tests added; execution pending. Owner's next task is to specify independent positive and negative acceptance examples.
+
+## 2026-11-27 — Public portfolio demo preparation
+- Owner requested a real interactive employer-facing URL before further feature work and authorized free Render hosting.
+- AI-assisted demo mode separates browser sessions using signed random HttpOnly/Secure/SameSite cookies, filters document read/search/delete by owner, caps uploads and library capacity, expires demo documents after 24 hours on subsequent API traffic, and disables model calls regardless of server credentials. Public uploads restricted to test TXT/Markdown, 1 MB; local mode retains text-PDF support. No confidential data should be uploaded. This is not a production multi-user authentication system.
+- Added cross-session regression and public-demo restrictions test. Deployment pending successful checks and workspace selection.
