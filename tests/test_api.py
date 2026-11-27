@@ -87,4 +87,26 @@ def test_bilingual_ui(client):
     assert 'Document library' in html and 'Dokumentenbibliothek' in html
     assert 'id="demo"' in html
     assert '#source-' in html
-    assert client.get('/api/health').json()['version']=='0.1.2'
+    assert client.get('/api/health').json()['version']=='0.1.3'
+
+
+def test_source_scope_and_depth(client):
+    a=add(client,'Support hours are 09:00 to 17:00.','a.txt').json()['id']
+    b=add(client,'Support hours are 10:00 to 18:00.','b.txt').json()['id']
+    q={'question':'support hours','document_ids':[b],'top_k':1}
+    result=client.post('/api/ask',json=q).json()
+    assert len(result['sources'])==1 and result['sources'][0]['document_id']==b
+    assert '18:00' in result['answer'] and '17:00' not in result['answer']
+    q['document_ids']=[]
+    assert client.post('/api/ask',json=q).json()['mode']=='no_match'
+    q['document_ids']=[a,b]
+    assert len(client.post('/api/ask',json=q).json()['sources'])==1
+
+def test_russian_and_controls(client):
+    html=client.get('/').text
+    assert 'value="ru"' in html and 'Библиотека документов' in html
+    assert '<html lang="de">' in html
+    assert all(f'id="{x}"' in html for x in ('all','none','depth','export'))
+    assert 'document_ids:' in html and 'URL.createObjectURL' in html
+    add(client,'Время поддержки с 09:00 до 17:00.','ru.txt')
+    assert '17:00' in client.post('/api/ask',json={'question':'Время поддержки'}).json()['answer']
