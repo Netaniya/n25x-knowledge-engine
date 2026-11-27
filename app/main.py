@@ -46,6 +46,7 @@ class Question(BaseModel):
     question: str=Field(min_length=2,max_length=1000)
     top_k: int=Field(default=4,ge=1,le=8)
     generate: bool=False
+    document_ids: list[str] | None = Field(default=None, max_length=2500)
 
 @contextmanager
 def db(path):
@@ -78,11 +79,11 @@ def create_app(database=None):
     path.parent.mkdir(parents=True,exist_ok=True)
     with db(path) as conn:
         conn.executescript('''CREATE TABLE IF NOT EXISTS documents(id TEXT PRIMARY KEY, name TEXT NOT NULL, created TEXT DEFAULT CURRENT_TIMESTAMP); CREATE TABLE IF NOT EXISTS chunks(id INTEGER PRIMARY KEY, document_id TEXT NOT NULL REFERENCES documents(id) ON DELETE CASCADE, page INTEGER, ordinal INTEGER NOT NULL, text TEXT NOT NULL);''')
-    api=FastAPI(title='N25X Knowledge Engine',version='0.1.2')
+    api=FastAPI(title='N25X Knowledge Engine',version='0.1.3')
     @api.get('/')
     def home(): return FileResponse(ROOT/'static'/'index.html')
     @api.get('/api/health')
-    def health(): return {'status':'ok','version':'0.1.2','retrieval':'BM25','generation_available':bool(os.getenv('LLM_API_KEY') and os.getenv('LLM_MODEL'))}
+    def health(): return {'status':'ok','version':'0.1.3','retrieval':'BM25','generation_available':bool(os.getenv('LLM_API_KEY') and os.getenv('LLM_MODEL'))}
     @api.get('/api/documents')
     def list_docs():
         with db(path) as conn:
@@ -112,6 +113,9 @@ def create_app(database=None):
     async def ask(query:Question):
         with db(path) as conn:
             rows=conn.execute('SELECT c.document_id,c.page,c.ordinal,c.text,d.name FROM chunks c JOIN documents d ON d.id=c.document_id ORDER BY c.id').fetchall()
+        if query.document_ids is not None:
+            selected=set(query.document_ids)
+            rows=[row for row in rows if row['document_id'] in selected]
         hits=retrieve(rows,query.question,query.top_k)
         if not hits: return {'mode':'no_match','answer':'No matching passages found. / Keine passenden Textstellen gefunden.','sources':[]}
         fallback={'mode':'retrieval','answer':'\n\n'.join(f"[{h['citation']}] {h['text']}" for h in hits),'sources':hits}
