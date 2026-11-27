@@ -73,3 +73,8 @@
 - Owner requested a real interactive employer-facing URL before further feature work and authorized free Render hosting.
 - AI-assisted demo mode separates browser sessions using signed random HttpOnly/Secure/SameSite cookies, filters document read/search/delete by owner, caps uploads and library capacity, expires demo documents after 24 hours on subsequent API traffic, and disables model calls regardless of server credentials. Public uploads restricted to test TXT/Markdown, 1 MB; local mode retains text-PDF support. No confidential data should be uploaded. This is not a production multi-user authentication system.
 - Added cross-session regression and public-demo restrictions test. Deployment pending successful checks and workspace selection.
+
+## 2026-11-27 — Owner live mobile acceptance findings
+- Owner opened the deployed Render application and submitted 'Как загрузить документы' and 'Как пользоваться'. Both produced no-match results. Owner identified missing onboarding and expected operational guidance. This is direct human functional feedback, not an AI-authored finding.
+- AI-assisted UI changes: visible three-language quick guide, one-click sample upload and real BM25 search, library shortcut, explicit empty-selection guidance and accurate public demo disclosure. Recognized common help questions display a labelled static guide, not simulated LLM output. No model or hosting plan changes.
+- Added browser assertions for Russian help, library shortcut and sample search. Deployment is pending a passing run and separate authorization.
