@@ -87,7 +87,7 @@ def test_bilingual_ui(client):
     assert 'Document library' in html and 'Dokumentenbibliothek' in html
     assert 'id="demo"' in html
     assert '#source-' in html
-    assert client.get('/api/health').json()['version']=='0.1.3'
+    assert client.get('/api/health').json()['version']=='0.2.0'
 
 
 def test_source_scope_and_depth(client):
@@ -110,3 +110,42 @@ def test_russian_and_controls(client):
     assert 'document_ids:' in html and 'URL.createObjectURL' in html
     add(client,'Время поддержки с 09:00 до 17:00.','ru.txt')
     assert '17:00' in client.post('/api/ask',json={'question':'Время поддержки'}).json()['answer']
+
+
+def test_hybrid_modes_and_fallback(client,monkeypatch):
+    from app import semantic
+    calls=[]
+    async def fake_embed(provider,texts):
+        calls.append((provider,texts))
+        return [[1.0,0.0]]+[[1.0,0.0] if 'Fernarbeit' in s else [0.0,1.0] for s in texts[1:]]
+    monkeypatch.setattr(semantic,'embed',fake_embed)
+    a=add(client,'Fernarbeit ist gestattet.','remote.txt').json()['id']
+    add(client,'Katzen schlafen.','cats.txt')
+    q={'question':'Homeoffice','top_k':1,'document_ids':[a]}
+    assert client.post('/api/ask',json=q).json()['mode']=='no_match'
+    assert not calls
+    res=client.post('/api/ask',json=dict(q,search_mode='local')).json()
+    assert res['search_engine'].startswith('hybrid_')
+    assert res['sources'][0]['document_id']==a
+    assert res['sources'][0]['score_type']=='rrf'
+    assert 'Katzen' not in str(calls)
+    assert client.post('/api/ask',json=dict(q,search_mode='cloud')).status_code==400
+    assert len(calls)==1
+    res=client.post('/api/ask',json=dict(q,search_mode='cloud',cloud_consent=True)).json()
+    assert res['embedding_provider']=='cloud' and len(calls)==2
+    async def fail(*args): raise RuntimeError('test outage')
+    monkeypatch.setattr(semantic,'embed',fail)
+    res=client.post('/api/ask',json={'question':'Fernarbeit','search_mode':'local'}).json()
+    assert res['search_warning']=='semantic_unavailable'
+    assert res['search_engine']=='bm25' and res['sources'][0]['score_type']=='bm25'
+
+def test_invalid_embedding_vectors():
+    from app.semantic import normalize
+    for v in ([0,0],[float('nan')],[],['bad']):
+        with pytest.raises(ValueError): normalize(v)
+
+def test_fusion():
+    from app.semantic import fuse
+    rows=[{'chunk_id':1,'text':'a'},{'chunk_id':2,'text':'b'}]
+    hits=fuse(rows,[rows[1]],[(1,.8),(0,.7)],2)
+    assert hits[0]['chunk_id']==2 and hits[0]['citation']=='S1'
