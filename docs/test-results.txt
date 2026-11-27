@@ -1,3 +1,5 @@
 Local archive pytest: 12 passed, rerun 2026-11-27. Browser interaction, Docker, live LLM and remote CI not tested. Repository copy requires independent CI verification.
 v0.1.2: tests and browser acceptance pending at publication; do not infer pass from previous version.
 Local working copy v0.1.2: 13 pytest tests passed (0.57 s); JavaScript syntax check passed. Browser navigation blocked by administrator policy in local execution environment. End-to-end tests, remote CI and Docker build NOT verified. Local copy reconstructed from repository update, not a fresh network clone. Browser smoke test added to CI.
+
+v0.1.3: local pytest -q -k 'not bilingual_ui and not russian_and_controls': 13 passed, 2 deselected (0.56 s). Backend and test Git blob hashes match GitHub. New UI inspected statically; real browser and remote CI pending.
