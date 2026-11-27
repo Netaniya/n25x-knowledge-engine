@@ -50,3 +50,6 @@
 - Preserve source traceability, German default language with English and Russian options, and theme selection. Detailed layout implementation and functional acceptance remain pending.
 
 - Owner reviewed and approved the illustrated chat-first UI concept. This is approval of the design direction, not acceptance of a working frontend. Next: select visual identity and implement the approved interface, then validate it in browser.
+
+## 2026-11-27 — Master brand identity
+- Project owner Natalie Ragulina (Netaniya) rejected earlier visual variants, specified a universal minimal N25X wordmark without extra symbols, chose the fifth monochrome concept as the starting point, requested blue tones and compact proportions, and explicitly approved the final blue design for all her GitHub projects. The compact web image is in branding/n25x-logo.webp. Full-resolution original saved separately. Trademark/design similarity clearance is pending.
