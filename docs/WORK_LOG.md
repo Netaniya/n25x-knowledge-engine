@@ -25,3 +25,8 @@
 - Owner requested Russian as an optional third language, retaining German as the default, and comparison with leading document intelligence applications.
 - AI-assisted implementation adds source selection, server-side source scoping, configurable result depth, visible BM25 relevance and local evidence export. Benchmark references: docs/BENCHMARK.md.
 - Local backend test run: 13 passed, 2 UI-dependent cases deselected. Git blob hashes for backend and tests match the published files. End-to-end acceptance and cloud deployment remain pending.
+
+## 2026-11-27 — Owner review and design policy
+- Project owner continues to report reviewing, testing, studying the implementation, researching improvements and directing changes. Specific additional test cases and results are not yet supplied; no additional acceptance tests are marked passed on that basis.
+- Owner specified a neutral language selector without national flags. Source inspection confirmed that the current selector contains only Deutsch, English and Русский, with no regional-indicator flag emoji or flag-icon references in the HTML. No application code change was needed.
+- Contribution tracking distinguishes human product direction, repository setup, review, manual testing and acceptance from AI-assisted implementation, documentation and automated checks. No measured percentage of authorship or effort is established; record concrete contributions and evidence rather than inventing quantitative metrics.
