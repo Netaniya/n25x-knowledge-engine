@@ -30,3 +30,7 @@
 - Project owner continues to report reviewing, testing, studying the implementation, researching improvements and directing changes. Specific additional test cases and results are not yet supplied; no additional acceptance tests are marked passed on that basis.
 - Owner specified a neutral language selector without national flags. Source inspection confirmed that the current selector contains only Deutsch, English and Русский, with no regional-indicator flag emoji or flag-icon references in the HTML. No application code change was needed.
 - Contribution tracking distinguishes human product direction, repository setup, review, manual testing and acceptance from AI-assisted implementation, documentation and automated checks. No measured percentage of authorship or effort is established; record concrete contributions and evidence rather than inventing quantitative metrics.
+
+## 2026-11-27 — Owner code review, v0.1.3
+- Owner reports reviewing app/main.py, finding no errors during her inspection and considering the implementation consistent with agreed requirements. Reviewed file at recording time: blob 236881ff42187a8c665f80a04824168e679c3a0e. This is a self-reported manual code review, not a proof of absence of defects or a completed functional acceptance test.
+- Next design decision: choose the semantic retrieval architecture, including local versus hosted embeddings, multilingual requirements, and a measurable comparison against the existing BM25 baseline.
