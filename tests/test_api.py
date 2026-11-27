@@ -78,3 +78,13 @@ def test_theme_selector(client):
     html=client.get("/").text
     assert all(f'value="{theme}"' in html for theme in ("navy","ocean","light"))
     assert "n25x-knowledge-theme" in html
+
+
+def test_bilingual_ui(client):
+    html=client.get('/').text
+    assert 'id="language"' in html
+    assert 'n25x-knowledge-language' in html
+    assert 'Document library' in html and 'Dokumentenbibliothek' in html
+    assert 'id="demo"' in html
+    assert '#source-' in html
+    assert client.get('/api/health').json()['version']=='0.1.2'

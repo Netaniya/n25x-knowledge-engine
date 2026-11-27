@@ -1,8 +1,10 @@
 # N25X Knowledge Engine
 
-**Version 0.1.1 — local document retrieval MVP**
+**Version 0.1.2 — local document retrieval MVP**
 
 Project owner and initiator: Natalie Ragulina (Netaniya). Initial implementation developed with AI assistance. A standalone portfolio project for evidence-based document search. No private NETA25X Studio code or documents are included.
+
+[Deutsch](README.de.md) · [English](README.md)
 
 ## Features
 
@@ -10,6 +12,7 @@ Project owner and initiator: Natalie Ragulina (Netaniya). Initial implementation
 - Persist extracted passages and PDF page numbers in SQLite; delete a document and its passages.
 - Rank relevant passages using BM25 lexical retrieval. Each result includes a source ID, filename, optional PDF page, and passage.
 - Offline mode returns passages, not a fabricated AI answer. Optional generation uses a configured OpenAI-compatible endpoint and validates that cited source IDs exist. Citation validity does not prove factual correctness.
+- German and English interface with persistent language selection, a fictional sample document, and clickable source citations.
 - Three switchable UI themes (night blue, deep turquoise, light turquoise), saved locally in the browser.
 - Browser UI, REST API and OpenAPI documentation; automated tests and a GitHub Actions CI definition.
 
@@ -67,4 +70,4 @@ Eigenständiger Prototyp für dokumentenbasierte Recherche mit Python/FastAPI, S
 
 ## Contributions and verification
 
-See [work log](docs/WORK_LOG.md), [learning notes](docs/LEARNING.md) and [test results](docs/test-results.txt). Owner review and manual testing are planned; record actual results before claiming them in a CV. No open-source license has been selected; public visibility alone does not grant a license.
+See [work log](docs/WORK_LOG.md), [learning notes](docs/LEARNING.md) and [test results](docs/test-results.txt). The owner reported a first manual review and test of v0.1.1; detailed test cases and second acceptance pass remain pending. See the work log. No open-source license has been selected; public visibility alone does not grant a license.

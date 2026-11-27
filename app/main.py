@@ -78,11 +78,11 @@ def create_app(database=None):
     path.parent.mkdir(parents=True,exist_ok=True)
     with db(path) as conn:
         conn.executescript('''CREATE TABLE IF NOT EXISTS documents(id TEXT PRIMARY KEY, name TEXT NOT NULL, created TEXT DEFAULT CURRENT_TIMESTAMP); CREATE TABLE IF NOT EXISTS chunks(id INTEGER PRIMARY KEY, document_id TEXT NOT NULL REFERENCES documents(id) ON DELETE CASCADE, page INTEGER, ordinal INTEGER NOT NULL, text TEXT NOT NULL);''')
-    api=FastAPI(title='N25X Knowledge Engine',version='0.1.1')
+    api=FastAPI(title='N25X Knowledge Engine',version='0.1.2')
     @api.get('/')
     def home(): return FileResponse(ROOT/'static'/'index.html')
     @api.get('/api/health')
-    def health(): return {'status':'ok','version':'0.1.1','retrieval':'BM25','generation_available':bool(os.getenv('LLM_API_KEY') and os.getenv('LLM_MODEL'))}
+    def health(): return {'status':'ok','version':'0.1.2','retrieval':'BM25','generation_available':bool(os.getenv('LLM_API_KEY') and os.getenv('LLM_MODEL'))}
     @api.get('/api/documents')
     def list_docs():
         with db(path) as conn:
